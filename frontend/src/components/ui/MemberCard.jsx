@@ -1,0 +1,111 @@
+// frontend/src/components/ui/MemberCard.jsx
+
+import {
+  SquarePen,
+  Trash2,
+  Phone,
+  Layers,
+  Printer,
+  Loader2,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
+
+const MemberCard = ({
+  member,
+  onView,
+  onEdit,
+  onDelete,
+  onPrint,
+  isPrinting,
+}) => {
+  const navigate = useNavigate();
+
+  // This logic is correct and calculates the active count
+  const activeChitsCount = useMemo(() => {
+    if (!member.assignments || member.assignments.length === 0) {
+      return 0;
+    }
+    const today = new Date().toISOString().split("T")[0];
+    return member.assignments.filter((a) => {
+      if (!a.chit || !a.chit.start_date || !a.chit.end_date) {
+        return false;
+      }
+      const { start_date, end_date } = a.chit;
+      return today >= start_date && today <= end_date;
+    }).length;
+  }, [member.assignments]);
+
+  return (
+    <div
+      className="rounded-lg p-4 shadow-md transition-all duration-300 cursor-pointer hover:scale-[1.02] bg-background-secondary"
+      onClick={() => navigate(`/members/view/${member.id}`)}
+    >
+      {/* Top Row: Name and Actions */}
+      <div className="flex justify-between items-center mb-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <h3 className="font-bold text-lg text-text-primary truncate">
+            {member.full_name}
+          </h3>
+        </div>
+        <div className="flex items-center flex-shrink-0">
+          {/* --- ADDED: PRINT BUTTON --- */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onPrint(member);
+            }}
+            disabled={isPrinting}
+            className="p-2 rounded-full text-info-accent hover:bg-info-bg transition-colors duration-200 disabled:opacity-50"
+            title="Download PDF"
+          >
+            {isPrinting ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Printer className="w-5 h-5" />
+            )}
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(member);
+            }}
+            className="p-2 rounded-full text-warning-accent hover:bg-warning-bg transition-colors duration-200"
+            title="Edit Member"
+          >
+            <SquarePen className="w-5 h-5" />
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(member);
+            }}
+            className="p-2 rounded-full text-error-accent hover:bg-error-bg transition-colors duration-200"
+            title="Delete Member"
+          >
+            <Trash2 className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* --- <hr> ADDED FOR CONSISTENCY --- */}
+      <hr className="border-border mb-3" />
+
+      {/* --- Bottom Row --- */}
+      <div className="flex justify-between items-center text-text-secondary text-sm">
+        <div className="flex items-center gap-2">
+          <Phone className="w-4 h-4" />
+          <span>{member.phone_number}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Layers className="w-4 h-4" />
+          <span>Active: {activeChitsCount}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MemberCard;
